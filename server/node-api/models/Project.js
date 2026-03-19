@@ -10,6 +10,7 @@ const projectSchema = new mongoose.Schema({
     commitment: { type: String, enum: ['full', 'partial', 'very_less'], default: 'partial' },
     role: { type: String, enum: ['TL', 'member'], default: 'member' }
   }],
+  members: { type: [String], default: [] },
   assigned_date: { type: String },
   period_alloted: { type: String },
   completion_date: { type: String, default: '' },
