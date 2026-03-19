@@ -4,6 +4,12 @@ const projectSchema = new mongoose.Schema({
   project: { type: String, required: true },
   company: { type: String, required: true },
   tl: { type: String, required: true },
+  members: [{
+    name: String,
+    priority: { type: Number, default: 0 },
+    commitment: { type: String, enum: ['full', 'partial', 'very_less'], default: 'partial' },
+    role: { type: String, enum: ['TL', 'member'], default: 'member' }
+  }],
   members: { type: [String], default: [] },
   assigned_date: { type: String },
   period_alloted: { type: String },

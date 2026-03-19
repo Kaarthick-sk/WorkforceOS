@@ -42,6 +42,7 @@ export default function Dashboard() {
                 company: p.company,
                 prob_statement: p.prob_statement,
                 requirements: p.requirements,
+                members: (p.members || []).map(m => typeof m === 'string' ? m : m.name),
                 members: p.members,
                 status: p.status
             });
