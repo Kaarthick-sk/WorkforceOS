@@ -2,13 +2,21 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const axios = require('axios');
+const dns = require('dns');
 
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const ragRoutes = require('./routes/ragRoutes');
+const Employee = require('./models/Employee');
 
 const app = express();
+
+// Force IPv4 resolution for localhost issues on Windows
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 // Middleware
 app.use(cors({ origin: '*' }));
@@ -23,15 +31,6 @@ app.use('/api/rag', ragRoutes);
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'Node API running' }));
 
-const axios = require('axios');
-const Employee = require('./models/Employee');
-const dns = require('dns');
-
-// Force IPv4 resolution for localhost issues on Windows
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
 const PORT = process.env.PORT || 5001;
 
 // Connect MongoDB and start server
@@ -40,7 +39,8 @@ mongoose.connect(process.env.MONGO_URI)
         console.log('✅ MongoDB connected');
         app.listen(PORT, async () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
-// Auto-sync employees to RAG on startup (with robust retry)
+
+            // Auto-sync employees to RAG on startup (with robust retry)
             const syncRAG = async (retries = 10) => {
                 try {
                     const employees = await Employee.find();
@@ -58,7 +58,7 @@ mongoose.connect(process.env.MONGO_URI)
                     }
                 }
             };
-            
+
             // Give RAG service time to initialize its model
             setTimeout(() => syncRAG(), 3000);
         });

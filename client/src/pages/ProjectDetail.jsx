@@ -72,7 +72,6 @@ export default function ProjectDetail() {
     if (loading) return <div className="loading"><div className="spinner"></div></div>;
     if (!project) return null;
 
-    const tlMember = project.members?.find(m => m.role === 'TL');
     const memberCount = project.members?.length || 0;
 
     return (
@@ -123,6 +122,12 @@ export default function ProjectDetail() {
                                     <div style={{ fontSize: '13px', lineHeight: '1.6' }}>{project.prob_statement}</div>
                                 </div>
                             )}
+                            {project.requirements && (
+                                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Requirements</div>
+                                    <div style={{ fontSize: '13px', lineHeight: '1.6' }}>{project.requirements}</div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Team Members Card */}
@@ -165,7 +170,7 @@ export default function ProjectDetail() {
                     <div className="card animate-in" style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
                         <div className="card-title">🤖 AI Project Assistant</div>
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>
-                            Ask anything about this project — risks, team, progress, or recommendations.
+                            Ask about risks, team performance, progress, or get recommendations for this project.
                         </p>
 
                         {/* Messages */}
@@ -189,9 +194,11 @@ export default function ProjectDetail() {
                                 <div style={{
                                     alignSelf: 'flex-start', background: 'var(--bg-secondary)',
                                     padding: '10px 14px', borderRadius: '16px 16px 16px 4px',
-                                    fontSize: '13px', color: 'var(--text-muted)'
+                                    fontSize: '13px', color: 'var(--text-muted)',
+                                    display: 'flex', alignItems: 'center', gap: 8
                                 }}>
-                                    ⏳ Thinking...
+                                    <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+                                    Analyzing...
                                 </div>
                             )}
                             <div ref={chatEndRef} />

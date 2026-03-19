@@ -1,13 +1,14 @@
 from vector_store import search_employees, encode_text, get_model
 import numpy as np
 
+
 def recommend_team(requirements: str, deadline: str, employee_statuses: list = None, top_k: int = 10) -> dict:
     """Use FAISS to find best-matched employees for project requirements with commitment filtering."""
     query = f"Project requirements: {requirements}. Deadline: {deadline}. Need skilled team members."
-    
+
     # Get all potential matches from FAISS
     # We get more than top_k because we might filter some out
-    matches = search_employees(query, top_k=50) 
+    matches = search_employees(query, top_k=50)
 
     if not matches:
         return {
@@ -22,11 +23,11 @@ def recommend_team(requirements: str, deadline: str, employee_statuses: list = N
     for m in matches:
         name = m["name"]
         status = status_map.get(name)
-        
+
         # PART 7.1: EXCLUDE employees who are TL in another active project
         if status and status.is_tl:
             continue
-            
+
         # PART 8: availability_score
         # very_less -> 1.0, partial -> 0.5, full -> 0.1, none -> 1.0
         commitment = status.commitment if status else "none"
@@ -37,13 +38,13 @@ def recommend_team(requirements: str, deadline: str, employee_statuses: list = N
             availability_score = 0.5
         elif commitment == "very_less":
             availability_score = 1.0
-            
+
         # PART 8: final score calculation
         # score = skill_match * 0.5 + experience * 0.2 + availability_score * 0.3
         # m["score"] from vector_store is the skill_match (cosine similarity/inverse distance)
         skill_match = m["score"]
-        experience_normalized = min(m["experience"] / 15.0, 1.0) # Normalize experience up to 15 years
-        
+        experience_normalized = min(m["experience"] / 15.0, 1.0)  # Normalize experience up to 15 years
+
         final_score = (skill_match * 0.5) + (experience_normalized * 0.2) + (availability_score * 0.3)
         m["final_score"] = final_score
         scored_matches.append(m)

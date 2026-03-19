@@ -56,7 +56,7 @@ const recommendTeam = async (req, res) => {
             const fullCommitment = emp.active_projects.some(ap => ap.commitment === 'full');
             const partialCommitment = emp.active_projects.some(ap => ap.commitment === 'partial');
             const veryLessCommitment = emp.active_projects.some(ap => ap.commitment === 'very_less');
-            
+
             let commitment = 'none';
             if (fullCommitment) commitment = 'full';
             else if (partialCommitment) commitment = 'partial';
@@ -136,17 +136,17 @@ const createProject = async (req, res) => {
                     role: m.role,
                     commitment: m.commitment
                 });
-                
+
                 // Update engagement status
                 if (m.commitment === 'full') emp.engagement_level = 'strongly engaged';
                 else if (m.commitment === 'partial' && emp.engagement_level !== 'strongly engaged') emp.engagement_level = 'moderate engagement';
                 else if (m.commitment === 'very_less' && !['strongly engaged', 'moderate engagement'].includes(emp.engagement_level)) emp.engagement_level = 'minimal engagement';
-                
+
                 await emp.save();
             }
         }
 
-        // Create TL user account
+        // Create TL user account if password provided
         if (tlPassword) {
             const username = tl.toLowerCase().replace(/\s+/g, '_');
             const existingUser = await User.findOne({ username });
@@ -157,13 +157,19 @@ const createProject = async (req, res) => {
                 await tlUser.save();
             } else {
                 existingUser.project = newProject._id;
+                existingUser.fullname = tl;
                 await existingUser.save();
             }
         }
 
-        res.status(201).json({ message: 'Project created successfully', project: newProject });
+        res.status(201).json({
+            message: 'Project created successfully',
+            project: newProject,
+            tlCredentials: { username: tl.toLowerCase().replace(/\s+/g, '_') }
+        });
     } catch (err) {
-        res.status(500).json({ message: 'Internal Server Error', error: err.message });
+        console.error('❌ Error creating project:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
 
@@ -185,7 +191,7 @@ const updateAllocation = async (req, res) => {
                 if (pIdx > -1) {
                     emp.active_projects[pIdx].commitment = m.commitment;
                 }
-                
+
                 // Re-calculate engagement status based on all active projects
                 const commitments = emp.active_projects.map(p => p.commitment);
                 if (commitments.includes('full')) emp.engagement_level = 'strongly engaged';
@@ -208,7 +214,7 @@ const updateProject = async (req, res) => {
     try {
         const oldProject = await Project.findById(req.params.id);
         const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        
+
         // PART 6: PROJECT COMPLETION LOGIC
         if (project.status === 'Completed' && oldProject.status !== 'Completed') {
             project.completion_date = new Date().toISOString().split('T')[0];
@@ -219,7 +225,7 @@ const updateProject = async (req, res) => {
                 const emp = await Employee.findOne({ name: m.name });
                 if (emp) {
                     emp.active_projects = emp.active_projects.filter(p => p.project_id.toString() !== req.params.id);
-                    
+
                     // Re-calculate engagement
                     const commitments = emp.active_projects.map(p => p.commitment);
                     if (commitments.includes('full')) emp.engagement_level = 'strongly engaged';
@@ -231,7 +237,7 @@ const updateProject = async (req, res) => {
                 }
             }
         }
-        
+
         res.json(project);
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
@@ -259,7 +265,7 @@ const deleteProject = async (req, res) => {
     }
 };
 
-module.exports = { 
-    getProjects, getProjectById, getProjectByUser, createProject, 
-    updateProject, deleteProject, recommendTeam, updateAllocation 
+module.exports = {
+    getProjects, getProjectById, getProjectByUser, createProject,
+    updateProject, deleteProject, recommendTeam, updateAllocation
 };
