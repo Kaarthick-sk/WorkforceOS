@@ -65,7 +65,6 @@ def recommend_members(request: RecommendRequest):
             requirements=request.requirements,
             deadline=request.deadline or "",
             employee_statuses=request.employee_statuses or []
-            deadline=request.deadline or ""
         )
         return result
     except Exception as e:
@@ -112,5 +111,4 @@ def project_summary(request: ProjectSummaryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

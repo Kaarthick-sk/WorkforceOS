@@ -197,7 +197,7 @@ export default function CreateProject() {
                             </div>
 
                             <button className="btn btn-success" onClick={handleAssignTeam} disabled={submitting} style={{ marginTop: '10px', width: '100%' }}>
-                                {submitting ? '保存中...' : '✅ Assign Team & Create Project'}
+                                {submitting ? 'Saving...' : '✅ Assign Team & Create Project'}
                             </button>
                         </div>
                     )}

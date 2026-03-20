@@ -14,8 +14,6 @@ const employeeSchema = new mongoose.Schema({
         commitment: { type: String }
     }],
     engagement_level: { type: String, enum: ['strongly engaged', 'moderate engagement', 'minimal engagement', 'Not Assigned'], default: 'Not Assigned' }
-
-    past_projects: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Employee', employeeSchema);

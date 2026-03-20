@@ -30,7 +30,6 @@ const getProjectByUser = async (req, res) => {
         const user = await User.findById(req.params.userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Search by project reference OR by TL name (fullname) OR by username pattern (fallback)
         const usernamePattern = user.username.replace(/_/g, ' ');
         const projects = await Project.find({
             $or: [
@@ -50,7 +49,6 @@ const getProjectByUser = async (req, res) => {
 const recommendTeam = async (req, res) => {
     const { requirements, deadline } = req.body;
     try {
-        // Collect all employee statuses for RAG filtering
         const employees = await Employee.find();
         const employeeStatuses = employees.map(emp => {
             const isTL = emp.active_projects.some(ap => ap.role === 'TL');
@@ -91,39 +89,14 @@ const createProject = async (req, res) => {
             return res.status(400).json({ message: 'Missing required fields.' });
         }
 
-        // PART 3 & 10: TL CONSTRAINT LOGIC
-        // A user can be TL of ONLY ONE active project
+        // TL CONSTRAINT LOGIC: A user can be TL of ONLY ONE active project
         const tlEmployee = await Employee.findOne({ name: tl });
         if (tlEmployee && tlEmployee.active_projects.some(p => p.role === 'TL')) {
             return res.status(400).json({ message: `${tl} is already a TL in another active project.` });
-        deadline, period_alloted, tl, tlPassword
-    } = req.body;
-
-    console.log(`Attempting to create project: ${project} for company: ${company}`);
-
-    try {
-        // Validation
-        if (!company || !project || !tl) {
-            return res.status(400).json({ message: 'Missing required fields: company, project, and tl are mandatory.' });
-        }
-
-        // Call RAG to recommend members
-        let recommendedMembers = [];
-        try {
-            console.log('Fetching team recommendations from RAG service...');
-            const ragRes = await axios.post(`${process.env.RAG_API}/recommend-members`, {
-                requirements: requirements || '',
-                deadline: deadline || period_alloted || ''
-            });
-            recommendedMembers = ragRes.data.recommended_members || [];
-            console.log(`RAG recommendations: ${recommendedMembers.length} members found.`);
-        } catch (ragErr) {
-            console.warn('RAG service unavailable, proceeding without recommendations:', ragErr.message);
         }
 
         const assigned_date = new Date().toISOString().split('T')[0];
 
-        // Format members correctly
         const formattedMembers = (members || []).map(m => ({
             name: typeof m === 'string' ? m : m.name,
             priority: m.priority || 0,
@@ -131,7 +104,6 @@ const createProject = async (req, res) => {
             role: m.role || 'member'
         }));
 
-        // Add TL to members with "full" commitment
         formattedMembers.push({
             name: tl,
             priority: 100,
@@ -151,7 +123,6 @@ const createProject = async (req, res) => {
 
         await newProject.save();
 
-        // PART 5.2: Update Employee records
         for (const m of formattedMembers) {
             const emp = await Employee.findOne({ name: m.name });
             if (emp) {
@@ -161,7 +132,6 @@ const createProject = async (req, res) => {
                     commitment: m.commitment
                 });
 
-                // Update engagement status
                 if (m.commitment === 'full') emp.engagement_level = 'strongly engaged';
                 else if (m.commitment === 'partial' && emp.engagement_level !== 'strongly engaged') emp.engagement_level = 'moderate engagement';
                 else if (m.commitment === 'very_less' && !['strongly engaged', 'moderate engagement'].includes(emp.engagement_level)) emp.engagement_level = 'minimal engagement';
@@ -169,23 +139,7 @@ const createProject = async (req, res) => {
                 await emp.save();
             }
         }
-        const newProject = new Project({
-            project,
-            company,
-            tl,
-            members: recommendedMembers,
-            assigned_date,
-            period_alloted: period_alloted || deadline || '',
-            completion_date: '',
-            prob_statement: prob_statement || '',
-            requirements: requirements || '',
-            status: 'Pending'
-        });
 
-        await newProject.save();
-        console.log(`✅ Project saved: ${newProject._id}`);
-
-        // Create TL user account if password provided
         if (tlPassword) {
             const username = tl.toLowerCase().replace(/\s+/g, '_');
             const existingUser = await User.findOne({ username });
@@ -197,21 +151,6 @@ const createProject = async (req, res) => {
             } else {
                 existingUser.project = newProject._id;
                 existingUser.fullname = tl;
-
-            if (!existingUser) {
-                const tlUser = new User({
-                    username,
-                    password: tlPassword,
-                    fullname: tl,
-                    role: 'user',
-                    project: newProject._id
-                });
-                await tlUser.save();
-                console.log(`✅ TL account created: ${username}`);
-            } else {
-                console.log(`ℹ️ TL account ${username} already exists. Updating project ref.`);
-                existingUser.project = newProject._id;
-                existingUser.fullname = tl; // Ensure fullname is set
                 await existingUser.save();
             }
         }
@@ -237,7 +176,6 @@ const updateAllocation = async (req, res) => {
         project.members = members;
         await project.save();
 
-        // Sync with Employee records
         for (const m of members) {
             const emp = await Employee.findOne({ name: m.name });
             if (emp) {
@@ -246,7 +184,6 @@ const updateAllocation = async (req, res) => {
                     emp.active_projects[pIdx].commitment = m.commitment;
                 }
 
-                // Re-calculate engagement status based on all active projects
                 const commitments = emp.active_projects.map(p => p.commitment);
                 if (commitments.includes('full')) emp.engagement_level = 'strongly engaged';
                 else if (commitments.includes('partial')) emp.engagement_level = 'moderate engagement';
@@ -260,12 +197,6 @@ const updateAllocation = async (req, res) => {
         res.json({ message: 'Allocation updated successfully', project });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
-            tlCredentials: { username: tl.toLowerCase().replace(/\s+/g, '_') },
-            recommendedMembers
-        });
-    } catch (err) {
-        console.error('❌ Error creating project:', err);
-        res.status(500).json({ message: 'Internal Server Error', error: err.message });
     }
 };
 
@@ -275,18 +206,15 @@ const updateProject = async (req, res) => {
         const oldProject = await Project.findById(req.params.id);
         const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
-        // PART 6: PROJECT COMPLETION LOGIC
         if (project.status === 'Completed' && oldProject.status !== 'Completed') {
             project.completion_date = new Date().toISOString().split('T')[0];
             await project.save();
 
-            // Free all employees
             for (const m of project.members) {
                 const emp = await Employee.findOne({ name: m.name });
                 if (emp) {
                     emp.active_projects = emp.active_projects.filter(p => p.project_id.toString() !== req.params.id);
 
-                    // Re-calculate engagement
                     const commitments = emp.active_projects.map(p => p.commitment);
                     if (commitments.includes('full')) emp.engagement_level = 'strongly engaged';
                     else if (commitments.includes('partial')) emp.engagement_level = 'moderate engagement';
@@ -298,7 +226,6 @@ const updateProject = async (req, res) => {
             }
         }
 
-        const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(project);
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
@@ -310,7 +237,6 @@ const deleteProject = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id);
         if (project) {
-            // Free all employees before deleting
             for (const m of project.members) {
                 const emp = await Employee.findOne({ name: m.name });
                 if (emp) {
@@ -330,4 +256,3 @@ module.exports = {
     getProjects, getProjectById, getProjectByUser, createProject,
     updateProject, deleteProject, recommendTeam, updateAllocation
 };
-module.exports = { getProjects, getProjectById, getProjectByUser, createProject, updateProject, deleteProject };

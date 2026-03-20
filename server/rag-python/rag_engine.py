@@ -9,10 +9,6 @@ def recommend_team(requirements: str, deadline: str, employee_statuses: list = N
     # Get all potential matches from FAISS
     # We get more than top_k because we might filter some out
     matches = search_employees(query, top_k=50)
-def recommend_team(requirements: str, deadline: str, top_k: int = 5) -> dict:
-    """Use FAISS to find best-matched employees for project requirements."""
-    query = f"Project requirements: {requirements}. Deadline: {deadline}. Need skilled team members."
-    matches = search_employees(query, top_k=top_k)
 
     if not matches:
         return {
@@ -62,11 +58,6 @@ def recommend_team(requirements: str, deadline: str, top_k: int = 5) -> dict:
         "recommended_members": member_names,
         "details": top_matches,
         "message": f"RAG recommended {len(member_names)} team members based on skills, experience, and availability."
-    member_names = [m["name"] for m in matches]
-    return {
-        "recommended_members": member_names,
-        "details": matches,
-        "message": f"RAG recommended {len(member_names)} team members based on skills and experience."
     }
 
 

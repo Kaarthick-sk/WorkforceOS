@@ -18,9 +18,6 @@ if (dns.setDefaultResultOrder) {
     dns.setDefaultResultOrder('ipv4first');
 }
 
-
-const app = express();
-
 // Middleware
 app.use(cors({ origin: '*' }));
 app.use(express.json());
@@ -33,9 +30,6 @@ app.use('/api/rag', ragRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'Node API running' }));
-
-const axios = require('axios');
-const Employee = require('./models/Employee');
 
 const PORT = process.env.PORT || 5001;
 
@@ -67,17 +61,6 @@ mongoose.connect(process.env.MONGO_URI)
 
             // Give RAG service time to initialize its model
             setTimeout(() => syncRAG(), 3000);
-            // Auto-sync employees to RAG on startup
-            try {
-                const employees = await Employee.find();
-                if (employees.length > 0) {
-                    const ragUrl = process.env.RAG_API || 'http://localhost:8000';
-                    await axios.post(`${ragUrl}/load-employees`, employees);
-                    console.log(`🤖 Synced ${employees.length} employees to RAG service at ${ragUrl}`);
-                }
-            } catch (err) {
-                console.warn('⚠️ RAG sync on startup failed - ensure RAG service is running.');
-            }
         });
     })
     .catch(err => {

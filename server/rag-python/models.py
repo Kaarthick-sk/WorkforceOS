@@ -13,9 +13,6 @@ class RecommendRequest(BaseModel):
     deadline: Optional[str] = ""
     employee_statuses: Optional[List[EmployeeStatus]] = []
 
-class RecommendRequest(BaseModel):
-    requirements: str
-    deadline: Optional[str] = ""
 
 class AnalyzeRequest(BaseModel):
     project_name: Optional[str] = ""
@@ -44,4 +41,3 @@ class Employee(BaseModel):
     availability: Optional[str] = "Available"
     past_projects: Optional[str] = ""
     active_projects: Optional[List[dict]] = []
-
