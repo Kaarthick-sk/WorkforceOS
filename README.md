@@ -42,8 +42,10 @@ npm run dev
 ### 3. RAG Service Setup (Python)
 ```bash
 cd server/rag-python
+python -m venv .venv
+./.venv/Scripts/activate
 pip install -r requirements.txt
-python main.py
+uvicorn main:app --reload
 ```
 
 ### 4. Admin App Setup
