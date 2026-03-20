@@ -62,7 +62,7 @@ export default function EmployeeManagement() {
                 <div className="admin-topbar">
                     <span className="topbar-title">Employee Management</span>
                     <div className="topbar-right">
-                        <span className="admin-badge">👥 {employees.length} Employees</span>
+                        <span className="admin-badge">👥 {employees.length} HR/Admin Users</span>
                     </div>
                 </div>
 

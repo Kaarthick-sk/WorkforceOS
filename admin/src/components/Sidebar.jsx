@@ -23,7 +23,7 @@ export default function Sidebar({ title }) {
                 <div className="sidebar-logo">⚙️</div>
                 <div>
                     <div className="sidebar-title">WorkforceOS</div>
-                    <div className="sidebar-subtitle">Admin Panel</div>
+                    <div className="sidebar-subtitle">HR/Admin Panel</div>
                 </div>
             </div>
 

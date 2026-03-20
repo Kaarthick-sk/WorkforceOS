@@ -167,14 +167,24 @@ export default function ProjectDetail() {
                     </div>
 
                     {/* Right: AI Chat */}
-                    <div className="card animate-in" style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
+                    <div className="card animate-in" style={{ display: 'flex', flexDirection: 'column', height: '550px', position: 'relative' }}>
                         <div className="card-title">🤖 AI Project Assistant</div>
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px' }}>
-                            Ask about risks, team performance, progress, or get recommendations for this project.
+                            Ask about risks, team performance, progress, or get recommendations.
                         </p>
 
-                        {/* Messages */}
-                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '4px 0' }}>
+                        {/* Messages Container */}
+                        <div id="chat-container" style={{ 
+                            height: '400px', 
+                            overflowY: 'auto', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: '12px', 
+                            padding: '12px',
+                            background: 'rgba(0,0,0,0.1)',
+                            borderRadius: '8px',
+                            marginBottom: '12px'
+                        }}>
                             {messages.map((msg, i) => (
                                 <div key={i} style={{
                                     maxWidth: '85%',
@@ -184,8 +194,8 @@ export default function ProjectDetail() {
                                     padding: '10px 14px',
                                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                                     fontSize: '13px',
-                                    lineHeight: '1.6',
-                                    whiteSpace: 'pre-wrap'
+                                    lineHeight: '1.5',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }}>
                                     {msg.text}
                                 </div>
@@ -197,50 +207,52 @@ export default function ProjectDetail() {
                                     fontSize: '13px', color: 'var(--text-muted)',
                                     display: 'flex', alignItems: 'center', gap: 8
                                 }}>
-                                    <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+                                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></div>
                                     Analyzing...
                                 </div>
                             )}
                             <div ref={chatEndRef} />
                         </div>
 
-                        {/* Suggestions */}
-                        {messages.length <= 1 && (
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '10px 0 6px' }}>
-                                {suggestedQuestions.map(q => (
-                                    <button key={q} onClick={() => { setQuestion(q); }} style={{
-                                        background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                                        borderRadius: '20px', padding: '6px 12px', fontSize: '12px',
-                                        cursor: 'pointer', color: 'var(--text-primary)'
-                                    }}>
-                                        {q}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        {/* Input Area (Fixed at bottom of card) */}
+                        <div style={{ marginTop: 'auto' }}>
+                            {/* Suggestions */}
+                            {messages.length <= 1 && (
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                    {suggestedQuestions.map(q => (
+                                        <button key={q} onClick={() => { setQuestion(q); }} style={{
+                                            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                            borderRadius: '16px', padding: '5px 10px', fontSize: '11px',
+                                            cursor: 'pointer', color: 'var(--text-primary)', transition: 'all 0.2s'
+                                        }}>
+                                            {q}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
-                        {/* Input */}
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-                            <input
-                                id="project-question-input"
-                                className="form-input"
-                                type="text"
-                                placeholder="Ask something about this project..."
-                                value={question}
-                                onChange={(e) => setQuestion(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                disabled={chatLoading}
-                                style={{ flex: 1 }}
-                            />
-                            <button
-                                id="send-question-btn"
-                                className="btn btn-primary"
-                                onClick={handleAsk}
-                                disabled={chatLoading || !question.trim()}
-                                style={{ padding: '0 18px', flexShrink: 0 }}
-                            >
-                                ➤
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                                <input
+                                    id="project-question-input"
+                                    className="form-input"
+                                    type="text"
+                                    placeholder="Ask something..."
+                                    value={question}
+                                    onChange={(e) => setQuestion(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    disabled={chatLoading}
+                                    style={{ flex: 1, height: '40px' }}
+                                />
+                                <button
+                                    id="send-question-btn"
+                                    className="btn btn-primary"
+                                    onClick={handleAsk}
+                                    disabled={chatLoading || !question.trim()}
+                                    style={{ width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                                >
+                                    ➤
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -41,13 +41,13 @@ export default function AdminDashboard() {
                 <div className="admin-topbar">
                     <span className="topbar-title">Dashboard Overview</span>
                     <div className="topbar-right">
-                        <span className="admin-badge">⚙️ Admin</span>
+                        <span className="admin-badge">⚙️ HR/Admin</span>
                     </div>
                 </div>
 
                 <div className="admin-content">
                     <div className="page-header">
-                        <h1 className="page-title">Welcome Back, Admin 👋</h1>
+                        <h1 className="page-title">Welcome Back, HR/Admin 👋</h1>
                         <p className="page-subtitle">Here's your workforce management overview</p>
                     </div>
 

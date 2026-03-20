@@ -33,7 +33,7 @@ export default function Login() {
                     <div className="login-logo-icon">🏢</div>
                     <span className="login-title">WorkforceOS</span>
                 </div>
-                <p className="login-subtitle">Employee Portal — Sign in to access your projects</p>
+                <p className="login-subtitle">Team Lead Portal — Sign in to access your projects</p>
 
                 {error && <div className="alert alert-error">⚠️ {error}</div>}
 

@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin';
-
 export default function AdminLogin() {
     const [form, setForm] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
@@ -29,7 +26,7 @@ export default function AdminLogin() {
                 localStorage.setItem('adminUser', JSON.stringify(data.user));
                 navigate('/dashboard');
             } else {
-                setError(data.message || 'Invalid admin credentials.');
+                setError(data.message || 'Invalid credentials.');
             }
         } catch (err) {
             setError('Connection error. Is the server running?');
@@ -43,35 +40,35 @@ export default function AdminLogin() {
             <div className="login-card">
                 <div className="login-logo">
                     <div className="login-logo-icon">⚙️</div>
-                    <span className="login-title">Admin Panel</span>
+                    <span className="login-title">HR/Admin Panel</span>
                 </div>
-                <p className="login-subtitle">Workforce Management System — Admin Access</p>
+                <p className="login-subtitle">Workforce Management System — HR/Admin Access</p>
 
                 {error && <div className="alert alert-error">⚠️ {error}</div>}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
+                <form onSubmit={handleSubmit} style={{ marginTop: '24px' }}>
+                    <div className="form-group" style={{ marginBottom: '20px' }}>
                         <label className="form-label" htmlFor="admin-username">Username</label>
                         <input
                             id="admin-username"
                             className="form-input"
                             type="text"
                             name="username"
-                            placeholder="Enter admin username"
+                            placeholder="Enter your username"
                             value={form.username}
                             onChange={handleChange}
                             required
                             autoComplete="username"
                         />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: '24px' }}>
                         <label className="form-label" htmlFor="admin-password">Password</label>
                         <input
                             id="admin-password"
                             className="form-input"
                             type="password"
                             name="password"
-                            placeholder="Enter admin password"
+                            placeholder="Enter your password"
                             value={form.password}
                             onChange={handleChange}
                             required
@@ -83,14 +80,11 @@ export default function AdminLogin() {
                         className="btn btn-primary btn-full"
                         type="submit"
                         disabled={loading}
+                        style={{ padding: '12px', fontWeight: 600 }}
                     >
-                        {loading ? '🔄 Authenticating...' : '🔐 Admin Sign In'}
+                        {loading ? '🔄 Authenticating...' : '🔐 Sign In'}
                     </button>
                 </form>
-
-                <div className="alert alert-info" style={{ marginTop: '20px', fontSize: '12px' }}>
-                    ℹ️ <strong>Default credentials:</strong> admin / admin
-                </div>
             </div>
         </div>
     );

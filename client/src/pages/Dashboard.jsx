@@ -78,8 +78,8 @@ export default function Dashboard() {
 
             <div className="main-content">
                 <div className="page-header">
-                    <h1 className="page-title">My Projects</h1>
-                    <p className="page-subtitle">View and manage your assigned projects</p>
+                    <h1 className="page-title">Team Lead Dashboard</h1>
+                    <p className="page-subtitle">Manage your assigned projects and team allocations</p>
                 </div>
 
                 {/* Stats */}

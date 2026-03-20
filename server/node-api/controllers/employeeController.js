@@ -2,8 +2,20 @@ const Employee = require('../models/Employee');
 
 // GET /api/employees
 const getEmployees = async (req, res) => {
+    const { eligible_tl } = req.query;
     try {
-        const employees = await Employee.find().sort({ createdAt: -1 });
+        let filter = {};
+        if (eligible_tl === 'true') {
+            // Exclude employees who have an active project with role 'TL'
+            filter = {
+                'active_projects': {
+                    $not: {
+                        $elemMatch: { role: 'TL' }
+                    }
+                }
+            };
+        }
+        const employees = await Employee.find(filter).sort({ createdAt: -1 });
         res.json(employees);
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });

@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function getCommitmentBadge(lvl) {
-    if (lvl === 'full') return { label: 'FULL', color: '#ef4444' };
-    if (lvl === 'partial') return { label: 'PARTIAL', color: '#f59e0b' };
-    return { label: 'MINIMAL', color: '#10b981' };
+    if (lvl === 'full') return { label: 'FULL', color: '#ef4444' }; // Red
+    if (lvl === 'partial') return { label: 'PARTIAL', color: '#f59e0b' }; // Yellow
+    return { label: 'VERY LESS', color: '#10b981' }; // Green
 }
 
 export default function Allocation() {
@@ -169,7 +169,7 @@ export default function Allocation() {
                                                 >
                                                     <option value="full">🔴 Full</option>
                                                     <option value="partial">🟡 Partial</option>
-                                                    <option value="very_less">🟢 Minimal</option>
+                                                    <option value="very_less">🟢 VERY LESS</option>
                                                 </select>
                                             )}
                                         </div>

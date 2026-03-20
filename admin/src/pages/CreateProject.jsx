@@ -21,7 +21,7 @@ export default function CreateProject() {
 
     const fetchEmployees = async () => {
         try {
-            const res = await api.get('/api/employees');
+            const res = await api.get('/api/employees?eligible_tl=true');
             setEmployees(res.data);
             // Sync employees to RAG
             try {
@@ -39,7 +39,7 @@ export default function CreateProject() {
     const handleRecommend = async (e) => {
         e.preventDefault();
         if (!form.company || !form.project || !form.tl) {
-            setMessage({ type: 'error', text: 'Please fill in Company, Project Name, and Team Lead.' });
+            setMessage({ type: 'error', text: 'Please fill in Client Company, Project Name, and select a Team Lead.' });
             return;
         }
         setRecommending(true);
@@ -78,10 +78,23 @@ export default function CreateProject() {
                 ...form,
                 members: selectedMembers.map(m => ({ name: m }))
             });
-            setMessage({ type: 'success', text: `✅ Project created successfully! Team assigned.` });
+            
+            const tlUser = res.data.tlCredentials.username;
+            const tlPass = form.tlPassword;
+
+            setMessage({ 
+                type: 'success', 
+                text: 'Project Created Successfully',
+                details: {
+                    title: 'Team Lead Created Successfully',
+                    username: tlUser,
+                    password: tlPass
+                }
+            });
             setForm(defaultForm);
             setRagMembers([]);
             setSelectedMembers([]);
+            fetchEmployees(); // Refresh eligible TLs
         } catch (err) {
             setMessage({ type: 'error', text: err.response?.data?.message || '❌ Failed to create project.' });
         } finally {
@@ -109,44 +122,56 @@ export default function CreateProject() {
                     </div>
 
                     {message && (
-                        <div className={`alert alert-${message.type === 'success' ? 'success' : 'error'}`}>
-                            {message.text}
+                        <div className={`alert alert-${message.type === 'success' ? 'success' : 'error'}`} style={{ padding: '20px', marginBottom: '24px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: message.details ? '12px' : '0' }}>{message.text}</div>
+                            {message.details && (
+                                <div style={{ background: 'rgba(255,255,255,0.1)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                    <div style={{ fontWeight: 600, color: 'var(--success)', marginBottom: '8px' }}>{message.details.title}</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '8px', fontSize: '14px' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Username:</span>
+                                        <strong style={{ letterSpacing: '0.5px' }}>{message.details.username}</strong>
+                                        <span style={{ color: 'var(--text-muted)' }}>Password:</span>
+                                        <strong style={{ letterSpacing: '0.5px' }}>{message.details.password}</strong>
+                                    </div>
+                                    <p style={{ marginTop: '12px', fontSize: '12px', opacity: 0.8 }}>Please share these credentials with the assigned Team Lead.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    <div className="card animate-in" style={{ marginBottom: '24px' }}>
-                        <div className="card-title">📁 Project Details</div>
+                    <div className="card animate-in" style={{ marginBottom: '24px', padding: '24px' }}>
+                        <div className="card-title" style={{ marginBottom: '20px' }}>📁 Project Details</div>
                         <form onSubmit={handleRecommend}>
-                            <div className="form-row">
+                            <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Client Company *</label>
-                                    <input className="form-input" type="text" name="company" value={form.company} onChange={handleChange} required />
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Client Company *</label>
+                                    <input className="form-input" type="text" name="company" placeholder="Enter client company name" value={form.company} onChange={handleChange} required />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Project Name *</label>
-                                    <input className="form-input" type="text" name="project" value={form.project} onChange={handleChange} required />
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Project Name *</label>
+                                    <input className="form-input" type="text" name="project" placeholder="Enter project name" value={form.project} onChange={handleChange} required />
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Problem Statement</label>
-                                <textarea className="form-textarea" name="prob_statement" value={form.prob_statement} onChange={handleChange} rows={3} />
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label className="form-label" style={{ fontWeight: 600 }}>Problem Statement</label>
+                                <textarea className="form-textarea" name="prob_statement" placeholder="Describe the project goal or problem statement" value={form.prob_statement} onChange={handleChange} rows={3} />
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Technical Requirements *</label>
-                                <textarea className="form-textarea" name="requirements" value={form.requirements} onChange={handleChange} rows={3} required />
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label className="form-label" style={{ fontWeight: 600 }}>Technical Requirements *</label>
+                                <textarea className="form-textarea" name="requirements" placeholder="Describe project technical requirements (e.g. React, Node.js, Python)" value={form.requirements} onChange={handleChange} rows={3} required />
                             </div>
 
-                            <div className="form-row">
+                            <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Deadline / Period</label>
-                                    <input className="form-input" type="text" name="deadline" value={form.deadline} onChange={handleChange} />
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Deadline / Period</label>
+                                    <input className="form-input" type="text" name="deadline" placeholder="Select deadline date or period" value={form.deadline} onChange={handleChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Team Lead *</label>
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Team Lead *</label>
                                     <select className="form-select" name="tl" value={form.tl} onChange={handleChange} required>
-                                        <option value="">— Select Team Lead —</option>
+                                        <option value="">— Select Eligible Team Lead —</option>
                                         {employees.map(emp => (
                                             <option key={emp._id} value={emp.name}>{emp.name}</option>
                                         ))}
@@ -154,13 +179,13 @@ export default function CreateProject() {
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Team Lead Password *</label>
-                                <input className="form-input" type="password" name="tlPassword" value={form.tlPassword} onChange={handleChange} required />
+                            <div className="form-group" style={{ marginBottom: '24px' }}>
+                                <label className="form-label" style={{ fontWeight: 600 }}>Team Lead Login Password *</label>
+                                <input className="form-input" type="password" name="tlPassword" placeholder="Set password for Team Lead login" value={form.tlPassword} onChange={handleChange} required />
                             </div>
 
-                            <button className="btn btn-primary" type="submit" disabled={recommending || submitting}>
-                                {recommending ? '🤖 Getting Recommendations...' : '🔍 Get RAG Recommendations'}
+                            <button className="btn btn-primary" type="submit" disabled={recommending || submitting} style={{ padding: '12px 24px', fontWeight: 600 }}>
+                                {recommending ? '🤖 Generating Recommendations...' : '🔍 Get AI Recommendations'}
                             </button>
                         </form>
                     </div>

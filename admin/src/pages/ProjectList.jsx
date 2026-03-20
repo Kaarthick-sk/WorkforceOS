@@ -55,7 +55,7 @@ export default function ProjectList() {
                 <div className="admin-topbar">
                     <span className="topbar-title">Project Management</span>
                     <div className="topbar-right">
-                        <span className="admin-badge">📁 {projects.length} Total Projects</span>
+                        <span className="admin-badge">📁 {projects.length} Total Projects (HR/Admin)</span>
                     </div>
                 </div>
 
