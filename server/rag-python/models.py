@@ -21,6 +21,7 @@ class AnalyzeRequest(BaseModel):
     requirements: Optional[str] = ""
     members: Optional[List[str]] = []
     question: Optional[str] = ""
+    projects: Optional[List[dict]] = []
 
 
 class ProjectSummaryRequest(BaseModel):

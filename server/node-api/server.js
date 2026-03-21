@@ -52,13 +52,6 @@ mongoose.connect(process.env.MONGO_URI)
                         await axios.post(`${ragUrl}/load-employees`, employees);
                         console.log(`🤖 Synced ${employees.length} employees to RAG service`);
                     }
-
-                    // Sync Projects
-                    const projects = await Project.find();
-                    if (projects.length > 0) {
-                        await axios.post(`${ragUrl}/load-projects`, projects);
-                        console.log(`📊 Synced ${projects.length} projects to RAG service`);
-                    }
                 } catch (err) {
                     if (retries > 0) {
                         console.log(`⏳ RAG sync failed (${err.message}). Retrying in 5s... (${retries} left)`);

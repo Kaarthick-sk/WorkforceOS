@@ -103,62 +103,72 @@ def analyze_project_rag(project_name: str, company: str, prob_statement: str,
 
 
 def generate_chart_data(query: str, projects: list) -> dict:
-    """Analyze query and return aggregated counts for charts."""
+    """Analyze query and return aggregated counts for charts from fresh project data."""
     q_lower = query.lower()
+    print(f"📈 Generating chart data from {len(projects)} projects")
     
-    # 1. Projects by Language/Technology
+    # 1. Projects by Language/Technology (Logic from Part 4)
     if any(w in q_lower for w in ["language", "tech", "node", "react", "python"]):
-        counts = {}
-        for p in projects:
-            reqs = (p.get("requirements") or "").lower()
-            for tech in ["react", "node", "python", "java", "swift", "flutter", "angular", "vue"]:
-                if tech in reqs:
-                    counts[tech.capitalize()] = counts.get(tech.capitalize(), 0) + 1
+        result = {}
+        for project in projects:
+            # Check for 'technology' field or fallback to parsing 'requirements'
+            tech = project.get("technology")
+            if not tech:
+                # Fallback: try to find common techs in requirements
+                reqs = (project.get("requirements") or "").lower()
+                tech = "Other"
+                for t in ["react", "node", "python", "java", "swift", "flutter", "angular", "vue"]:
+                    if t in reqs:
+                        tech = t.capitalize()
+                        break
+            
+            result[tech] = result.get(tech, 0) + 1
+            
         return {
             "type": "chart",
             "chartType": "bar",
             "title": "Projects by Technology",
-            "data": [{"label": k, "value": v} for k, v in counts.items()]
+            "data": [{"label": k, "value": v} for k, v in result.items()]
         }
 
     # 2. Projects by Status
     if "status" in q_lower or "ongoing" in q_lower or "complete" in q_lower:
-        counts = {}
+        result = {}
         for p in projects:
             status = p.get("status", "Unknown")
-            counts[status] = counts.get(status, 0) + 1
+            result[status] = result.get(status, 0) + 1
         return {
             "type": "chart",
             "chartType": "pie",
             "title": "Projects by Status",
-            "data": [{"label": k, "value": v} for k, v in counts.items()]
+            "data": [{"label": k, "value": v} for k, v in result.items()]
         }
 
     # 3. Projects per Company
     if "company" in q_lower or "client" in q_lower:
-        counts = {}
+        result = {}
         for p in projects:
             comp = p.get("company", "Other")
-            counts[comp] = counts.get(comp, 0) + 1
+            result[comp] = result.get(comp, 0) + 1
         return {
             "type": "chart",
             "chartType": "bar",
             "title": "Projects per client",
-            "data": [{"label": k, "value": v} for k, v in counts.items()]
+            "data": [{"label": k, "value": v} for k, v in result.items()]
         }
     
     # Default: Distribution of team sizes
-    counts = {"Small (<3)": 0, "Medium (3-5)": 0, "Large (>5)": 0}
+    result = {"Small (<3)": 0, "Medium (3-5)": 0, "Large (>5)": 0}
     for p in projects:
         size = len(p.get("members") or [])
-        if size < 3: counts["Small (<3)"] += 1
-        elif size <= 5: counts["Medium (3-5)"] += 1
-        else: counts["Large (>5)"] += 1
+        if size < 3: result["Small (<3)"] += 1
+        elif size <= 5: result["Medium (3-5)"] += 1
+        else: result["Large (>5)"] += 1
     return {
         "type": "chart",
         "chartType": "pie",
         "title": "Team Size Distribution",
-        "data": [{"label": k, "value": v} for k, v in counts.items()]
+        "data": [{"label": k, "value": v} for k, v in result.items()]
     }
 
 

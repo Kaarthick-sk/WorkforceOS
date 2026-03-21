@@ -1,0 +1,5 @@
+Show a chart of projects by status
+Give me a chart of number of projects per company
+Show a chart of projects based on technologies used
+Compare technologies used across projects using a chart
+Show distribution of projects by status
