@@ -16,9 +16,14 @@ export default function ProjectDetail() {
     const [question, setQuestion] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
     const chatEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
 
     useEffect(() => { fetchProject(); }, [id]);
-    useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     const fetchProject = async () => {
         setLoading(true);
@@ -143,25 +148,19 @@ export default function ProjectDetail() {
                                 </button>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                                {project.members?.map((m, i) => {
-                                    const commitColor = m.commitment === 'full' ? '#ef4444' : m.commitment === 'partial' ? '#f59e0b' : '#10b981';
-                                    return (
-                                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < memberCount - 1 ? '1px solid var(--border)' : 'none' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: m.role === 'TL' ? 'var(--accent)' : 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: m.role === 'TL' ? '#fff' : 'var(--text-primary)' }}>
-                                                    {m.name?.[0]?.toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontSize: '13px', fontWeight: 500 }}>{m.name} {m.role === 'TL' && '👑'}</div>
-                                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Priority: {m.priority}%</div>
-                                                </div>
+                                {project.members?.map((m, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < memberCount - 1 ? '1px solid var(--border)' : 'none' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: m.role === 'TL' ? 'var(--accent)' : 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: m.role === 'TL' ? '#fff' : 'var(--text-primary)' }}>
+                                                {m.name?.[0]?.toUpperCase()}
                                             </div>
-                                            <span style={{ fontSize: '10px', fontWeight: 700, color: commitColor, background: commitColor + '22', padding: '2px 7px', borderRadius: '10px' }}>
-                                                {m.commitment?.toUpperCase()}
-                                            </span>
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 500 }}>{m.name}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{m.role === 'TL' ? '👑 Team Lead' : 'Team Member'}</div>
+                                            </div>
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -174,7 +173,7 @@ export default function ProjectDetail() {
                         </p>
 
                         {/* Messages Container */}
-                        <div id="chat-container" style={{ 
+                        <div id="chat-container" ref={chatContainerRef} style={{ 
                             height: '400px', 
                             overflowY: 'auto', 
                             display: 'flex', 
@@ -211,7 +210,6 @@ export default function ProjectDetail() {
                                     Analyzing...
                                 </div>
                             )}
-                            <div ref={chatEndRef} />
                         </div>
 
                         {/* Input Area (Fixed at bottom of card) */}

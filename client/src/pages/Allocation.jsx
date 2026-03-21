@@ -72,7 +72,7 @@ export default function Allocation() {
                 </a>
 
                 <div className="page-header">
-                    <h1 className="page-title">📊 Team Allocation</h1>
+                    <h1 className="page-title">📊 Manage Team Allocation</h1>
                     <p className="page-subtitle">{project.project} — {project.company}</p>
                 </div>
 
