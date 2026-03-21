@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import ChartRenderer from '../components/ChartRenderer';
 
 function getStatusBadge(status) {
     const map = { Active: 'badge-success', Completed: 'badge-info', 'On Hold': 'badge-warning', Cancelled: 'badge-danger' };
@@ -56,7 +57,14 @@ export default function ProjectDetail() {
                 members: (project.members || []).map(m => typeof m === 'string' ? m : m.name),
                 question: userQ
             });
-            setMessages(prev => [...prev, { role: 'ai', text: res.data.response || 'No response.' }]);
+            
+            const data = res.data;
+            setMessages(prev => [...prev, { 
+                role: 'ai', 
+                text: data.response || 'No response.',
+                type: data.type || 'text',
+                chart: data.chart || (data.type === 'chart' ? { chartType: data.chartType, data: data.data, title: data.title } : null)
+            }]);
         } catch {
             setMessages(prev => [...prev, { role: 'ai', text: '⚠️ AI assistant is temporarily unavailable.' }]);
         } finally {
@@ -186,17 +194,30 @@ export default function ProjectDetail() {
                         }}>
                             {messages.map((msg, i) => (
                                 <div key={i} style={{
-                                    maxWidth: '85%',
+                                    maxWidth: '90%',
                                     alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                                     background: msg.role === 'user' ? 'var(--accent)' : 'var(--bg-secondary)',
                                     color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
-                                    padding: '10px 14px',
+                                    padding: '12px 16px',
                                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                                     fontSize: '13px',
                                     lineHeight: '1.5',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '10px'
                                 }}>
-                                    {msg.text}
+                                    {/* Text Content */}
+                                    {msg.text && <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>}
+
+                                    {/* Chart Content */}
+                                    {(msg.type === 'chart' || msg.type === 'mixed') && msg.chart && (
+                                        <ChartRenderer 
+                                            chartType={msg.chart.chartType} 
+                                            data={msg.chart.data} 
+                                            title={msg.chart.title} 
+                                        />
+                                    )}
                                 </div>
                             ))}
                             {chatLoading && (

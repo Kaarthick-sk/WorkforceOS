@@ -62,9 +62,10 @@ def recommend_team(requirements: str, deadline: str, employee_statuses: list = N
 
 
 def analyze_project_rag(project_name: str, company: str, prob_statement: str,
-                         requirements: str, members: list, question: str) -> dict:
+                         requirements: str, members: list, question: str, all_projects: list = None) -> dict:
     """Retrieve relevant context and generate analysis response."""
     context_parts = []
+    all_projects = all_projects or []
 
     if project_name:
         context_parts.append(f"Project: {project_name}")
@@ -87,41 +88,120 @@ def analyze_project_rag(project_name: str, company: str, prob_statement: str,
             context += f". Related skilled employees: {skills_context}"
 
     # Generate rule-based intelligent response
-    response = generate_analysis_response(question, context, project_name, prob_statement, requirements, members)
+    result = generate_analysis_response(question, context, project_name, prob_statement, requirements, members, all_projects)
 
     return {
         "question": question,
-        "response": response,
+        "type": result.get("type", "text"),
+        "response": result.get("message", ""),
+        "chart": result.get("chart"),
+        "chartType": result.get("chartType"),
+        "title": result.get("title"),
+        "data": result.get("data"),
         "context_used": context[:500] + "..." if len(context) > 500 else context
     }
 
 
+def generate_chart_data(query: str, projects: list) -> dict:
+    """Analyze query and return aggregated counts for charts."""
+    q_lower = query.lower()
+    
+    # 1. Projects by Language/Technology
+    if any(w in q_lower for w in ["language", "tech", "node", "react", "python"]):
+        counts = {}
+        for p in projects:
+            reqs = (p.get("requirements") or "").lower()
+            for tech in ["react", "node", "python", "java", "swift", "flutter", "angular", "vue"]:
+                if tech in reqs:
+                    counts[tech.capitalize()] = counts.get(tech.capitalize(), 0) + 1
+        return {
+            "type": "chart",
+            "chartType": "bar",
+            "title": "Projects by Technology",
+            "data": [{"label": k, "value": v} for k, v in counts.items()]
+        }
+
+    # 2. Projects by Status
+    if "status" in q_lower or "ongoing" in q_lower or "complete" in q_lower:
+        counts = {}
+        for p in projects:
+            status = p.get("status", "Unknown")
+            counts[status] = counts.get(status, 0) + 1
+        return {
+            "type": "chart",
+            "chartType": "pie",
+            "title": "Projects by Status",
+            "data": [{"label": k, "value": v} for k, v in counts.items()]
+        }
+
+    # 3. Projects per Company
+    if "company" in q_lower or "client" in q_lower:
+        counts = {}
+        for p in projects:
+            comp = p.get("company", "Other")
+            counts[comp] = counts.get(comp, 0) + 1
+        return {
+            "type": "chart",
+            "chartType": "bar",
+            "title": "Projects per client",
+            "data": [{"label": k, "value": v} for k, v in counts.items()]
+        }
+    
+    # Default: Distribution of team sizes
+    counts = {"Small (<3)": 0, "Medium (3-5)": 0, "Large (>5)": 0}
+    for p in projects:
+        size = len(p.get("members") or [])
+        if size < 3: counts["Small (<3)"] += 1
+        elif size <= 5: counts["Medium (3-5)"] += 1
+        else: counts["Large (>5)"] += 1
+    return {
+        "type": "chart",
+        "chartType": "pie",
+        "title": "Team Size Distribution",
+        "data": [{"label": k, "value": v} for k, v in counts.items()]
+    }
+
+
 def generate_analysis_response(question: str, context: str, project_name: str,
-                                 prob_statement: str, requirements: str, members: list) -> str:
-    """Generate meaningful response based on project context."""
+                                 prob_statement: str, requirements: str, members: list, all_projects: list = None) -> dict:
+    """Generate meaningful response based on project context or global data."""
     q_lower = question.lower() if question else ""
+    all_projects = all_projects or []
+
+    # Intent Detection for Visualization
+    if any(word in q_lower for word in ["chart", "graph", "distribution", "compare", "analysis"]):
+        chart_info = generate_chart_data(question, all_projects)
+        return {
+            "type": "mixed",
+            "message": f"Sure! Here is the {chart_info['title'].lower()} based on current system data.",
+            "chart": chart_info
+        }
 
     if any(word in q_lower for word in ["risk", "challenge", "problem", "issue"]):
-        return (
-            f"**Risk Analysis for {project_name}:**\n\n"
-            f"Based on the problem statement — *{prob_statement}* — the key risks include:\n\n"
-            f"• **Technical Risk**: Complex requirements like {requirements[:100]}... may require specialized expertise.\n"
-            f"• **Resource Risk**: Team of {len(members)} members must be carefully coordinated.\n"
-            f"• **Timeline Risk**: Meeting deadlines requires clear milestone definitions.\n"
-            f"• **Scope Creep**: Problem statement complexity suggests close requirement management.\n\n"
-            f"**Mitigation**: Regular sprints, clear documentation, and iterative testing are recommended."
-        )
+        return {
+            "type": "text",
+            "message": (
+                f"**Risk Analysis for {project_name}:**\n\n"
+                f"Based on the problem statement — *{prob_statement}* — the key risks include:\n\n"
+                f"• **Technical Risk**: Complex requirements like {requirements[:100]}... may require specialized expertise.\n"
+                f"• **Resource Risk**: Team of {len(members)} members must be carefully coordinated.\n"
+                f"• **Timeline Risk**: Meeting deadlines requires clear milestone definitions.\n"
+                f"• **Scope Creep**: Problem statement complexity suggests close requirement management.\n\n"
+                f"**Mitigation**: Regular sprints, clear documentation, and iterative testing are recommended."
+            )
+        }
     elif any(word in q_lower for word in ["team", "member", "who"]):
         if members:
-            return (
+            msg = (
                 f"**Team Composition for {project_name}:**\n\n"
                 f"The project has {len(members)} assigned members: {', '.join(members)}.\n\n"
                 f"Based on the requirements ({requirements[:80]}...), the team covers the necessary skill sets. "
                 f"Ensure roles are clearly defined with a designated Team Lead coordinating tasks."
             )
-        return f"No team members have been assigned to {project_name} yet. Use the RAG recommendation system to suggest the ideal team."
+            return {"type": "text", "message": msg}
+        return {"type": "text", "message": f"No team members have been assigned to {project_name} yet. Use the RAG recommendation system to suggest the ideal team."}
     elif any(word in q_lower for word in ["progress", "status", "complete", "done"]):
-        return (
+        msg = (
             f"**Progress Assessment for {project_name}:**\n\n"
             f"Project is currently active. Based on the requirements scope, focus areas should include:\n"
             f"1. Requirement validation with {members[0] if members else 'Team Lead'}\n"
@@ -130,8 +210,9 @@ def generate_analysis_response(question: str, context: str, project_name: str,
             f"4. Testing and quality assurance\n\n"
             f"Regular communication between all {len(members)} team members is critical for on-time delivery."
         )
+        return {"type": "text", "message": msg}
     elif any(word in q_lower for word in ["recommend", "suggest", "improve", "better"]):
-        return (
+        msg = (
             f"**Recommendations for {project_name}:**\n\n"
             f"• Define clear acceptance criteria for: {requirements[:80]}...\n"
             f"• Schedule weekly stand-ups with the {len(members)}-member team\n"
@@ -139,8 +220,9 @@ def generate_analysis_response(question: str, context: str, project_name: str,
             f"• Document the problem statement evolution regularly\n"
             f"• Set up monitoring and feedback loops early in development"
         )
+        return {"type": "text", "message": msg}
     else:
-        return (
+        msg = (
             f"**Project Analysis — {project_name}:**\n\n"
             f"**Company**: {context.split('Company: ')[1].split('.')[0] if 'Company:' in context else 'N/A'}\n"
             f"**Problem**: {prob_statement[:200] if prob_statement else 'Not specified'}\n"
@@ -149,6 +231,7 @@ def generate_analysis_response(question: str, context: str, project_name: str,
             f"This project addresses a well-defined problem scope. The assigned team should focus on "
             f"iterative delivery, clear documentation, and stakeholder alignment throughout the project lifecycle."
         )
+        return {"type": "text", "message": msg}
 
 
 def summarize_project(project_name: str, company: str, prob_statement: str,

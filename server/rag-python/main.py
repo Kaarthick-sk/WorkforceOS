@@ -25,6 +25,7 @@ app.add_middleware(
 
 # In-memory employee store for RAG (populated from Node API on demand)
 _employee_cache = []
+_project_cache = []
 
 
 @app.get("/")
@@ -44,6 +45,14 @@ def load_employees(employees: List[dict] = Body(...)):
     _employee_cache = employees
     build_index(employees)
     return {"message": f"Loaded {len(employees)} employees into FAISS index."}
+
+
+@app.post("/load-projects")
+def load_projects(projects: List[dict] = Body(...)):
+    """Load projects into memory for analysis/charts."""
+    global _project_cache
+    _project_cache = projects
+    return {"message": f"Loaded {len(projects)} projects into memory."}
 
 
 @app.post("/recommend-members")
@@ -83,7 +92,8 @@ def analyze_project(request: AnalyzeRequest):
             prob_statement=request.prob_statement or "",
             requirements=request.requirements or "",
             members=request.members or [],
-            question=request.question or "What is the overview of this project?"
+            question=request.question or "What is the overview of this project?",
+            all_projects=_project_cache
         )
         return result
     except Exception as e:

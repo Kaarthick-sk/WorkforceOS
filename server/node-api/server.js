@@ -10,6 +10,7 @@ const employeeRoutes = require('./routes/employeeRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const ragRoutes = require('./routes/ragRoutes');
 const Employee = require('./models/Employee');
+const Project = require('./models/Project');
 
 const app = express();
 
@@ -43,11 +44,20 @@ mongoose.connect(process.env.MONGO_URI)
             // Auto-sync employees to RAG on startup (with robust retry)
             const syncRAG = async (retries = 10) => {
                 try {
+                    const ragUrl = process.env.RAG_API || 'http://127.0.0.1:8000';
+                    
+                    // Sync Employees
                     const employees = await Employee.find();
                     if (employees.length > 0) {
-                        const ragUrl = process.env.RAG_API || 'http://127.0.0.1:8000';
                         await axios.post(`${ragUrl}/load-employees`, employees);
-                        console.log(`🤖 Synced ${employees.length} employees to RAG service at ${ragUrl}`);
+                        console.log(`🤖 Synced ${employees.length} employees to RAG service`);
+                    }
+
+                    // Sync Projects
+                    const projects = await Project.find();
+                    if (projects.length > 0) {
+                        await axios.post(`${ragUrl}/load-projects`, projects);
+                        console.log(`📊 Synced ${projects.length} projects to RAG service`);
                     }
                 } catch (err) {
                     if (retries > 0) {
